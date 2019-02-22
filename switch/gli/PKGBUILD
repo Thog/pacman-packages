@@ -1,0 +1,40 @@
+# Maintainer:  Thog <contact@thog.eu>
+
+pkgname=switch-gli
+pkgver=0.8.2
+pkgrel=1
+pkgdesc='OpenGL Image (GLI) is a header only C++ image library for graphics software'
+arch=('any')
+url='https://github.com/g-truc/gli'
+license=(MIT)
+options=(!strip libtool staticlibs)
+#source=("${url}/releases/download/${pkgver}/gli-${pkgver}.zip")
+source=("gli-disable-test.patch" "${pkgname}::git+${url}.git")
+sha256sums=('SKIP' 'SKIP')
+makedepends=('devkitpro-pkgbuild-helpers')
+
+build() {
+  source $DEVKITPRO/switchvars.sh
+
+  cd $pkgname
+  patch -p1 -i $srcdir/gli-disable-test.patch
+
+  mkdir -p $srcdir/build
+  cd $srcdir/build
+
+  cmake -G"Unix Makefiles" -DCMAKE_TOOLCHAIN_FILE=/opt/devkitpro/devkita64.cmake \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=$PORTLIBS_PREFIX \
+    -DCMAKE_INSTALL_LIBDIR=lib \
+    -DCMAKE_CXX_FLAGS="$CFLAGS $CPPFLAGS -D_GLIBCXX_USE_C99_MATH_TR1 -D_LDBL_EQ_DBL" \
+    ../$pkgname
+
+  make
+
+}
+
+package() {
+  cd build
+
+  make install DESTDIR="$pkgdir"
+}
